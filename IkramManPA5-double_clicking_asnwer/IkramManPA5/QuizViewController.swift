@@ -7,11 +7,8 @@
 //
 
 import UIKit
-//1- BUGS:
-//1. Tap twice on selected answer (not bug, but needs to be changed)
+import CoreMotion
 
-//2- TODO:
-//1. Change color when answer is selected
 class QuizViewController: UIViewController {
     
     //1 - VARS
@@ -31,13 +28,18 @@ class QuizViewController: UIViewController {
     private var isCorrectAnswer = false
     private var isClicked = false
     
+    var chosenOption = 4
     
+    var motionManager = CMMotionManager()
+
+   /*
     private var selectedA = 0
     private var selectedB = 0
     private var selectedC = 0
     private var selectedD = 0
+    */
     
-    
+    var buttonList = [UIButton]()
     //IBOUTLETS
     @IBOutlet weak var questionNUM: UILabel!
     
@@ -54,20 +56,161 @@ class QuizViewController: UIViewController {
     {
         super.viewDidLoad()
         
+        // Put the buttons in an array
+        buttonList = [optionA, optionB, optionC, optionD]
+        // Add action to each
+        for each in buttonList {
+            each.addTarget(self, action: #selector(onClick(_:)), for: .touchUpInside)
+        }
+        
         unselectAllBTNs()
         
         //Store questions.dict in a dictionary -> questions: [[String:Any]]!
         readQuestionsFromJSON()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        motionManager.deviceMotionUpdateInterval = 1/60
+        
+        motionManager.startDeviceMotionUpdates(using: .xArbitraryZVertical)
+        
+        Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(updateDeviceMotion), userInfo: nil, repeats: true)
+    }
+    
+    // All buttons' alpha = 1
     private func unselectAllBTNs()
     {
+        /*
         selectedA = 0
         selectedB = 0
         selectedC = 0
         selectedD = 0
+        */
+        
+        for each in buttonList {
+            each.alpha = 1
+        }
     }
 
+    // Everytime a button is clicked, it sends the tag
+    @IBAction func onClick(_ sender: UIButton) {
+        
+        unselectAllBTNs()
+        // If the same button is clicked again, it sends the same tag as chosenOption
+        // This will trigger submission
+        if sender.tag == chosenOption {
+            
+            submitAnswer()
+        }
+        
+        // The button is clicked for the first time, set the chosenOption to button's tag (id)
+        else {
+        chosenOption = sender.tag
+        // Set chosen button's alpha to 0.5
+        buttonList[chosenOption].alpha = 0.5
+        }
+    }
+    
+    // Submit the answer
+    func submitAnswer() {
+        
+        var chosen: String
+        switch chosenOption {
+        case 0: chosen = "A"
+        case 1: chosen = "B"
+        case 2: chosen = "C"
+        case 3: chosen = "D"
+        default: chosen = ""
+        }
+        
+        if chosen == correctOption {
+            isCorrectAnswer = true
+            timeLBL.text = "Correct! Answer is \(chosen)"
+        }
+        else {
+            isCorrectAnswer = false
+            timeLBL.text = "WRONG :( Answer is \(correctOption!)"
+        }
+        
+        isClicked = true
+
+        chosenOption = 4
+    }
+    
+    @objc func updateDeviceMotion(){
+        
+        if let data = motionManager.deviceMotion {
+            
+            let attitude = data.attitude
+            
+            let userAcceleration = data.userAcceleration
+            
+            print("accel x: \(userAcceleration.x),accel y: \(userAcceleration.y) ,accel z: \(userAcceleration.z)")
+            // Tilted right, move chosen option to the right
+            if attitude.roll > 0.8 && attitude.roll < 2 {
+                
+                if chosenOption == 0 || chosenOption == 2 {
+                    chosenOption += 1
+                    unselectAllBTNs()
+                    buttonList[chosenOption].alpha = 0.5
+                }
+            }
+            
+            // Tilted left, move chosen option to the left
+            if attitude.roll < -0.8  && attitude.roll > -2{
+                
+                if chosenOption == 1 || chosenOption == 3 {
+                    chosenOption -= 1
+                    unselectAllBTNs()
+                    buttonList[chosenOption].alpha = 0.5
+                }
+            }
+            
+            // Tilted towards user, move option up
+            if attitude.pitch > 1.5 {
+                if chosenOption == 0 || chosenOption == 1 {
+                    chosenOption += 2
+                    unselectAllBTNs()
+                    buttonList[chosenOption].alpha = 0.5
+                }
+            }
+            // Tilted away from user, move option down
+            if attitude.pitch < 0.3 {
+                if chosenOption == 2 || chosenOption == 3 {
+                    chosenOption -= 2
+                    unselectAllBTNs()
+                    buttonList[chosenOption].alpha = 0.5
+                }
+            }
+            
+            // If the device moves away from user at z acceleration greater than 0.5, or makes some big yaw > 3, submit the answer
+            if userAcceleration.z < -0.5 || abs(attitude.yaw) > 3 {
+                submitAnswer()
+            }
+            
+        }
+    }
+    
+    // Randomly select a button with a shake
+    override func motionEnded(_ motion: UIEventSubtype, with event: UIEvent?) {
+        if motion == .motionShake {
+            
+            var rand = Int(arc4random_uniform(4))
+            
+            // If the rand is the same as chosen option, get another one
+            if rand == chosenOption {
+                rand = Int(arc4random_uniform(4))
+            }
+            
+            chosenOption = rand
+            unselectAllBTNs()
+            buttonList[chosenOption].alpha = 0.5
+            
+        }
+    }
+    /*
     @IBAction func onClickA(_ sender: UIButton)
     {
         selectedA += 1
@@ -93,6 +236,7 @@ class QuizViewController: UIViewController {
             }
         }
     }
+     
     @IBAction func onClickB(_ sender: UIButton)
     {
         selectedB += 1
@@ -167,7 +311,7 @@ class QuizViewController: UIViewController {
             }
         }
     }
-    
+    */
     private func readQuestionsFromJSON()
     {
         //1- URL String
@@ -183,8 +327,8 @@ class QuizViewController: UIViewController {
         let datatask = session.dataTask(with: url!) { (data, response, error) in //(d,r,e) are optional
             if let result_from_url = data
             {
-                print ("READING JSON:")
-                print (result_from_url)
+                //print ("READING JSON:")
+                //print (result_from_url)
                 
                 do
                 {
@@ -216,7 +360,7 @@ class QuizViewController: UIViewController {
         datatask.resume()
         
         
-        //6. Start displaying questions each 20 minutes (if option clicked, TIMER is invalidated).
+        //6. Start displaying questions each 20 seconds (if option clicked, TIMER is invalidated).
         self.TIMER = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(self.start), userInfo: ["sth": self.current_question], repeats: true)
     }
     
@@ -257,6 +401,8 @@ class QuizViewController: UIViewController {
     {
         isCorrectAnswer = false
         isClicked = false
+        
+        unselectAllBTNs()
         
         c_q_index += 1
         //print ("c_q_index = \(c_q_index)")

@@ -42,5 +42,7 @@
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 	</array>
+	<key>NSMotionUsageDescription</key>
+	<string>App needs motion usage permission</string>
 </dict>
 </plist>
