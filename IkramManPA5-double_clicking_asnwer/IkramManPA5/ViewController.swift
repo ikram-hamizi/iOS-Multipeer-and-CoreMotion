@@ -17,7 +17,7 @@ class ViewController: UIViewController, MCBrowserViewControllerDelegate, MCSessi
     private var browser: MCBrowserViewController! //3.
     private var ADassistant: MCAdvertiserAssistant! //4.
     
-    private var MAXPLAYERS = 3
+    private var MAXPLAYERS = 1
     private var players_peerIDs: [MCPeerID]!
     
     private var gameIsChosen = false

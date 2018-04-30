@@ -37,13 +37,13 @@ class QuizViewController: UIViewController, MCSessionDelegate {
     private var chosenOption = 4
     
     private var motionManager = CMMotionManager()
-
-   /*
-    private var selectedA = 0
-    private var selectedB = 0
-    private var selectedC = 0
-    private var selectedD = 0
-    */
+    
+    /*
+     private var selectedA = 0
+     private var selectedB = 0
+     private var selectedC = 0
+     private var selectedD = 0
+     */
     
     private var buttonList = [UIButton]()
     //IBOUTLETS
@@ -68,10 +68,15 @@ class QuizViewController: UIViewController, MCSessionDelegate {
     @IBOutlet private weak var bubble4IMG: UIImageView!
     
     private var multiplayerIMGS: [UIImageView]!
-    private var lbl1: UILabel!
-    private var lbl2: UILabel!
-    private var lbl3: UILabel!
-    private var lbl4: UILabel!
+    private var ans1LBL: UILabel!
+    private var ans2LBL: UILabel!
+    private var ans3LBL: UILabel!
+    private var ans4LBL: UILabel!
+    
+    @IBOutlet private weak var score1LBL: UILabel!
+    @IBOutlet private weak var score2LBL: UILabel!
+    @IBOutlet private weak var score3LBL: UILabel!
+    @IBOutlet private weak var score4LBL: UILabel!
     
     
     //2- FUNCTIONS
@@ -121,11 +126,11 @@ class QuizViewController: UIViewController, MCSessionDelegate {
     private func unselectAllBTNs()
     {
         /*
-        selectedA = 0
-        selectedB = 0
-        selectedC = 0
-        selectedD = 0
-        */
+         selectedA = 0
+         selectedB = 0
+         selectedC = 0
+         selectedD = 0
+         */
         
         for each in buttonList {
             each.alpha = 1
@@ -134,10 +139,20 @@ class QuizViewController: UIViewController, MCSessionDelegate {
     
     private func addAnswerSubviewsToBubbles()
     {
-        bubble1IMG.addSubview(lbl1)
-        bubble2IMG.addSubview(lbl2)
-        bubble3IMG.addSubview(lbl3)
-        bubble4IMG.addSubview(lbl4)
+        ans1LBL = UILabel()
+        ans2LBL = UILabel()
+        ans3LBL = UILabel()
+        ans4LBL = UILabel()
+        
+        ans1LBL.text = ""
+        ans2LBL.text = ""
+        ans3LBL.text = ""
+        ans4LBL.text = ""
+        
+        bubble1IMG.addSubview(ans1LBL)
+        bubble2IMG.addSubview(ans2LBL)
+        bubble3IMG.addSubview(ans3LBL)
+        bubble4IMG.addSubview(ans4LBL)
     }
     
     private func hideAllMultiplayerImages()
@@ -149,11 +164,23 @@ class QuizViewController: UIViewController, MCSessionDelegate {
     
     private func unhideAllMultiplayerImages()
     {
+        //UNHIDE IMAGES
         for each in multiplayerIMGS {
             each.isHidden = false
         }
+        
+        //ALPHA = 1 only untill peerCount
+        if let peerCount = MCsession?.connectedPeers.count
+        {
+            for i in stride(from: peerCount+1, to: multiplayerIMGS.count/2, by: 1)
+            {
+                multiplayerIMGS[i].alpha = 0.18
+                multiplayerIMGS[i+4].alpha = 0.18
+            }
+        }
     }
-
+    
+    
     // Everytime a button is clicked, it sends the tag
     @IBAction func onClick(_ sender: UIButton) {
         
@@ -164,18 +191,19 @@ class QuizViewController: UIViewController, MCSessionDelegate {
             
             submitAnswer()
         }
-        
-        // The button is clicked for the first time, set the chosenOption to button's tag (id)
-        else {
-        chosenOption = sender.tag
-        // Set chosen button's alpha to 0.5
-        buttonList[chosenOption].alpha = 0.5
+            
+            // The button is clicked for the first time, set the chosenOption to button's tag (id)
+        else
+        {
+            chosenOption = sender.tag
+            // Set chosen button's alpha to 0.5
+            buttonList[chosenOption].alpha = 0.5
         }
     }
     
-    // Submit the answer
-    func submitAnswer() {
-        
+    //Chosen answer (BUTTON.TAG(chosenOption) -> STRING)
+    private func chosenAnswer() -> String
+    {
         var chosen: String
         switch chosenOption {
         case 0: chosen = "A"
@@ -184,6 +212,14 @@ class QuizViewController: UIViewController, MCSessionDelegate {
         case 3: chosen = "D"
         default: chosen = ""
         }
+        return chosen
+    }
+    
+    // Submit the answer
+    func submitAnswer() {
+        
+        //1. Submit answer single playar (after selection)
+        let chosen = chosenAnswer()
         
         if chosen == correctOption {
             isCorrectAnswer = true
@@ -195,8 +231,25 @@ class QuizViewController: UIViewController, MCSessionDelegate {
         }
         
         isClicked = true
-
         chosenOption = 4
+        
+         //2. (++) If multiplayer -> send answer to peers
+        if isMultiplayer!
+        {
+            sendAnswerToPeers(score: chosen)
+        }
+    }
+    
+    private func sendAnswerToPeers(score: String)
+    {
+        let myAnswer =  NSKeyedArchiver.archivedData(withRootObject: score)
+        
+        do {
+            try MCsession!.send(myAnswer, toPeers: MCsession!.connectedPeers, with: .reliable)
+        }
+        catch let e {
+            print("Error in sending my score - \(e)")
+        }
     }
     
     @objc func updateDeviceMotion(){
@@ -271,107 +324,107 @@ class QuizViewController: UIViewController, MCSessionDelegate {
         }
     }
     /*
-    @IBAction func onClickA(_ sender: UIButton)
-    {
-        selectedA += 1
-        if selectedA == 1 // selected first time
-        {
-            unselectAllBTNs()
-            selectedA = 1
-        }
-        else if selectedA == 2//A selected second time
-        {
-            unselectAllBTNs()
-            isClicked = true
-            
-            if correctOption == "A"
-            {
-                isCorrectAnswer = true
-                timeLBL.text = "Correct! Answer is A"
-            }
-            else
-            {
-                isCorrectAnswer = false
-                timeLBL.text = "WRONG :( Answer is \(correctOption!)"
-            }
-        }
-    }
+     @IBAction func onClickA(_ sender: UIButton)
+     {
+     selectedA += 1
+     if selectedA == 1 // selected first time
+     {
+     unselectAllBTNs()
+     selectedA = 1
+     }
+     else if selectedA == 2//A selected second time
+     {
+     unselectAllBTNs()
+     isClicked = true
      
-    @IBAction func onClickB(_ sender: UIButton)
-    {
-        selectedB += 1
-        if selectedB == 1 // selected first time
-        {
-            unselectAllBTNs()
-            selectedB = 1
-        }
-        else if selectedB == 2
-        {
-            unselectAllBTNs()
-            
-            isClicked = true
-            if correctOption == "B"
-            {
-                isCorrectAnswer = true
-                timeLBL.text = "Correct! Answer is B"
-            }
-            else
-            {
-                isCorrectAnswer = false
-                timeLBL.text = "WRONG :( Answer is \(correctOption!)"
-            }
-        }
-    }
-    @IBAction func onClickC(_ sender: UIButton)
-    {
-        selectedC += 1
-        if selectedC == 1 // selected first time
-        {
-            unselectAllBTNs()
-            selectedC = 1
-        }
-        else if selectedC == 2
-        {
-            unselectAllBTNs()
-            isClicked = true
-            
-            if correctOption == "C"
-            {
-                isCorrectAnswer = true
-                timeLBL.text = "Correct! Answer is C"
-            }
-            else
-            {
-                isCorrectAnswer = false
-                timeLBL.text = "WRONG :( Answer is \(correctOption!)"
-            }
-        }
-    }
-    @IBAction func onClickD(_ sender: UIButton)
-    {
-        selectedD += 1
-        if selectedD == 1// selected first time
-        {
-            unselectAllBTNs()
-            selectedD = 1
-        }
-        else if selectedD == 2
-        {
-            unselectAllBTNs()
-            isClicked = true
-            if correctOption == "D"
-            {
-                isCorrectAnswer = true
-                timeLBL.text = "Correct! Answer is D"
-            }
-            else
-            {
-                isCorrectAnswer = false
-                timeLBL.text = "WRONG :( Answer is \(correctOption!)"
-            }
-        }
-    }
-    */
+     if correctOption == "A"
+     {
+     isCorrectAnswer = true
+     timeLBL.text = "Correct! Answer is A"
+     }
+     else
+     {
+     isCorrectAnswer = false
+     timeLBL.text = "WRONG :( Answer is \(correctOption!)"
+     }
+     }
+     }
+     
+     @IBAction func onClickB(_ sender: UIButton)
+     {
+     selectedB += 1
+     if selectedB == 1 // selected first time
+     {
+     unselectAllBTNs()
+     selectedB = 1
+     }
+     else if selectedB == 2
+     {
+     unselectAllBTNs()
+     
+     isClicked = true
+     if correctOption == "B"
+     {
+     isCorrectAnswer = true
+     timeLBL.text = "Correct! Answer is B"
+     }
+     else
+     {
+     isCorrectAnswer = false
+     timeLBL.text = "WRONG :( Answer is \(correctOption!)"
+     }
+     }
+     }
+     @IBAction func onClickC(_ sender: UIButton)
+     {
+     selectedC += 1
+     if selectedC == 1 // selected first time
+     {
+     unselectAllBTNs()
+     selectedC = 1
+     }
+     else if selectedC == 2
+     {
+     unselectAllBTNs()
+     isClicked = true
+     
+     if correctOption == "C"
+     {
+     isCorrectAnswer = true
+     timeLBL.text = "Correct! Answer is C"
+     }
+     else
+     {
+     isCorrectAnswer = false
+     timeLBL.text = "WRONG :( Answer is \(correctOption!)"
+     }
+     }
+     }
+     @IBAction func onClickD(_ sender: UIButton)
+     {
+     selectedD += 1
+     if selectedD == 1// selected first time
+     {
+     unselectAllBTNs()
+     selectedD = 1
+     }
+     else if selectedD == 2
+     {
+     unselectAllBTNs()
+     isClicked = true
+     if correctOption == "D"
+     {
+     isCorrectAnswer = true
+     timeLBL.text = "Correct! Answer is D"
+     }
+     else
+     {
+     isCorrectAnswer = false
+     timeLBL.text = "WRONG :( Answer is \(correctOption!)"
+     }
+     }
+     }
+     */
     
     private func multiplayer()
     {
@@ -512,11 +565,7 @@ class QuizViewController: UIViewController, MCSessionDelegate {
         }
     }
     
-    
-    
-    
-    
-    //FNs: MCSessionDelegate (5 REQUIRED)
+    //MARK - FNs: MCSessionDelegate (5 REQUIRED from class Protocol)
     //1. DID START RECEIVING
     func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {
         //Called when a peer starts snding a "file" to this device
@@ -526,14 +575,13 @@ class QuizViewController: UIViewController, MCSessionDelegate {
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
         //Called when a peer sends an "NSData" to this device
         
-        print("QUIZ << didReceive data START!")
+        print("QUIZ << didReceive data: SCORE START!")
         
         //Needs to be run on the main thread
-        DispatchQueue.main.async
-        {
-            if let receivedPEERS = NSKeyedUnarchiver.unarchiveObject(with: data) as? [MCPeerID]
+        DispatchQueue.main.async {
+            if let receivedSCORE = NSKeyedUnarchiver.unarchiveObject(with: data) as? String
             {
-                print ("QUIZ <<< I  RECEIVED NEW PEER ADDED: \([receivedPEERS.count])")
+                print ("QUIZ <<< I  RECEIVED NEW score: \(receivedSCORE)")
             }
         }
     }
