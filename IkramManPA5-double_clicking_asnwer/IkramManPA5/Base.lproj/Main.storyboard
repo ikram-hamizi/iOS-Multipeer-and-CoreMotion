@@ -23,19 +23,19 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView userInteractionEnabled="NO" alpha="0.45000000000000001" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="background-2579719_960_720" translatesAutoresizingMaskIntoConstraints="NO" id="S1D-9o-q9Y">
+                            <imageView userInteractionEnabled="NO" alpha="0.050000000000000003" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="background-2579719_960_720" translatesAutoresizingMaskIntoConstraints="NO" id="S1D-9o-q9Y">
                                 <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             </imageView>
-                            <imageView userInteractionEnabled="NO" alpha="0.25" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="water_pattern_by_nemaakos-d5n2v50" translatesAutoresizingMaskIntoConstraints="NO" id="uFx-qi-F86" userLabel="background">
+                            <imageView userInteractionEnabled="NO" alpha="0.050000000000000003" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="water_pattern_by_nemaakos-d5n2v50" translatesAutoresizingMaskIntoConstraints="NO" id="uFx-qi-F86" userLabel="background">
                                 <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
-                                <autoresizingMask key="autoresizingMask"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <color key="backgroundColor" red="1" green="0.5" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <color key="tintColor" red="0.93892411440000001" green="0.77855205110000003" blue="0.83353834100000002" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                             </imageView>
                             <visualEffectView opaque="NO" alpha="0.84999999999999998" contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="98n-lc-l1c">
                                 <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
-                                <autoresizingMask key="autoresizingMask"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" heightSizable="YES"/>
                                 <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" ambiguous="YES" insetsLayoutMarginsFromSafeArea="NO" id="Fp6-dd-gbZ">
                                     <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -362,6 +362,10 @@
                         <outlet property="bubble2IMG" destination="t6a-VH-4cf" id="CAP-Ae-EPq"/>
                         <outlet property="bubble3IMG" destination="YiR-t5-oWG" id="c8G-BC-8Uf"/>
                         <outlet property="bubble4IMG" destination="G6h-vV-1wS" id="Ord-yE-ZhY"/>
+                        <outlet property="name1LBL" destination="VZR-nm-oFi" id="Zrf-6U-vzb"/>
+                        <outlet property="name2LBL" destination="Ahw-7e-cdA" id="AJr-qz-ZZD"/>
+                        <outlet property="name3LBL" destination="9lQ-gB-6MM" id="y9h-eF-KpY"/>
+                        <outlet property="name4LBL" destination="eI2-66-LQd" id="Nhd-Qa-J45"/>
                         <outlet property="optionA" destination="7a7-SH-yy8" id="FDU-0o-SQb"/>
                         <outlet property="optionB" destination="sAw-2d-4Zh" id="MZl-XG-Qb3"/>
                         <outlet property="optionC" destination="gPn-Ct-esS" id="Uql-3Q-fCA"/>
@@ -372,6 +376,10 @@
                         <outlet property="player4IMG" destination="My7-Kt-4H6" id="AwP-Xd-QB9"/>
                         <outlet property="questionBody" destination="67j-2M-IFz" id="aUV-6k-B9F"/>
                         <outlet property="questionNUM" destination="Skb-YE-kPY" id="tLm-ne-2Ee"/>
+                        <outlet property="score1LBL" destination="aLW-4i-tqP" id="6GV-Bd-TiI"/>
+                        <outlet property="score2LBL" destination="glv-Oe-LE1" id="57k-ge-tdU"/>
+                        <outlet property="score3LBL" destination="f0d-jt-muz" id="1wn-eN-MLQ"/>
+                        <outlet property="score4LBL" destination="gGE-Av-qOK" id="gFj-88-Qod"/>
                         <outlet property="timeLBL" destination="6Bk-n9-GLH" id="vVf-lR-pLb"/>
                     </connections>
                 </viewController>

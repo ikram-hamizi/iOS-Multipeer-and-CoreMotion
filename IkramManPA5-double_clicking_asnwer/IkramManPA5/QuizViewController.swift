@@ -11,11 +11,13 @@ import CoreMotion
 import MultipeerConnectivity
 
 //1//. BUGS:
-//1- Other peer is not receivng data (didReceive: data function is entered, but data is not unarchived)
+//1- didReceive: data function is entered, but data is not unarchived (ANSWER)
 
 //2//. TODO:
 //1- UPDATE SCORES
-//2- ADD PLAYER NAMES LABELS
+//2- Winners and losers notified.
+//3- RESTART QUIZ (button is non functional)
+//4- Create other json files
 
 class QuizViewController: UIViewController, MCSessionDelegate {
     
@@ -42,6 +44,7 @@ class QuizViewController: UIViewController, MCSessionDelegate {
     private var isClicked = false
     
     private var chosenOption = 4
+    private var submittedPlayersNUM = 0
     
     private var motionManager = CMMotionManager()
     
@@ -75,7 +78,7 @@ class QuizViewController: UIViewController, MCSessionDelegate {
     @IBOutlet private weak var bubble3IMG: UIImageView!
     @IBOutlet private weak var bubble4IMG: UIImageView!
     
-    private var multiplayerIMGS: [UIImageView]!
+    private var multiplayerIMGS: [UIView]!
     private var ans1LBL: UILabel!
     private var ans2LBL: UILabel!
     private var ans3LBL: UILabel!
@@ -86,13 +89,23 @@ class QuizViewController: UIViewController, MCSessionDelegate {
     @IBOutlet private weak var score3LBL: UILabel!
     @IBOutlet private weak var score4LBL: UILabel!
     
+    private var score1 = 0
+    private var score2 = 0
+    private var score3 = 0
+    private var score4 = 0
+    
+    @IBOutlet private weak var name1LBL: UILabel!
+    @IBOutlet private weak var name2LBL: UILabel!
+    @IBOutlet private weak var name3LBL: UILabel!
+    @IBOutlet private weak var name4LBL: UILabel!
+    
     
     //2- FUNCTIONS
     //1~ VIEWDIDLOAD
     override func viewDidLoad()
     {
         super.viewDidLoad()
-        multiplayerIMGS = [player1IMG, player2IMG, player3IMG, player4IMG, bubble1IMG, bubble2IMG, bubble3IMG, bubble4IMG]
+        multiplayerIMGS = [player1IMG, player2IMG, player3IMG, player4IMG, bubble1IMG, bubble2IMG, bubble3IMG, bubble4IMG, score1LBL, score2LBL, score3LBL, score4LBL, name1LBL, name2LBL, name3LBL, name4LBL]
         
         // Put the buttons in an array
         buttonList = [optionA, optionB, optionC, optionD]
@@ -157,10 +170,10 @@ class QuizViewController: UIViewController, MCSessionDelegate {
         ans3LBL = UILabel()
         ans4LBL = UILabel()
         
-        ans1LBL.text = ""
-        ans2LBL.text = ""
-        ans3LBL.text = ""
-        ans4LBL.text = ""
+        ans1LBL.text = "/"
+        ans2LBL.text = "/"
+        ans3LBL.text = "/"
+        ans4LBL.text = "/"
         
         ans1LBL.layer.zPosition = 2
         ans2LBL.layer.zPosition = 2
@@ -182,20 +195,36 @@ class QuizViewController: UIViewController, MCSessionDelegate {
     
     private func unhideAllMultiplayerImages()
     {
-        //UNHIDE IMAGES
+        //1. UNHIDE IMAGES
         for each in multiplayerIMGS {
             each.isHidden = false
         }
         
-        //ALPHA = 1 only untill peerCount
         if let peerCount = MCsession?.connectedPeers.count
         {
-            for i in stride(from: peerCount+1, to: multiplayerIMGS.count/2, by: 1)
+             //2. ALPHA = 1 only untill peerCount
+            for i in stride(from: peerCount+1, to: multiplayerIMGS.count/4, by: 1)
             {
                 multiplayerIMGS[i].alpha = 0.18
                 multiplayerIMGS[i+4].alpha = 0.18
+                multiplayerIMGS[i+2*4].alpha = 0.18
+                multiplayerIMGS[i+3*4].alpha = 0.18
+            }
+  
+            //3. Update names of players
+            
+            for i in stride(from: 0, to: peerCount, by: 1)
+            {
+                if let nameLBL = multiplayerIMGS[i+3*4] as? UILabel, let session = MCsession
+                {
+                    if i == 0
+                    { nameLBL.text = "Me" }
+                    else
+                    { nameLBL.text = "\(session.connectedPeers[i].displayName)" }
+                }
             }
         }
+        //End of function
     }
     
     
@@ -446,7 +475,11 @@ class QuizViewController: UIViewController, MCSessionDelegate {
     
     private func multiplayer()
     {
-        
+        //1. Update the peer labels with their names
+        if let session = MCsession
+        {
+            
+        }
     }
     
     private func singleplayer()
@@ -500,7 +533,6 @@ class QuizViewController: UIViewController, MCSessionDelegate {
         //5- LAUNCH
         datatask.resume()
         
-        
         //6. Start displaying questions each 20 seconds (if option clicked, TIMER is invalidated).
         self.TIMER = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(self.start), userInfo: ["sth": self.current_question], repeats: true)
     }
@@ -520,13 +552,24 @@ class QuizViewController: UIViewController, MCSessionDelegate {
             //print ("time--: \(time)")
             timeLBL.text = "time remaining: \(time)"
             
-            if time == 0 || isClicked
+            //1- If Time is up --OR-- Singleplayer: option Clicked
+            if time == 0 || (!isMultiplayer! && isClicked)
             {
                 //2- Invalidate question TIMER
                 invalidateTimer()
                 
                 //3- Start TIMER again
                 nextQuestion()
+            }
+            
+            //2- If Multiplayer: ** Wait until everyone has submitted -> nextQuestion()
+            if isMultiplayer! && time > 0
+            {
+                if submittedPlayersNUM == MCsession!.connectedPeers.count
+                {
+                    nextQuestion()
+                    submittedPlayersNUM = 0 //RESET
+                }
             }
         }
     }
@@ -593,19 +636,25 @@ class QuizViewController: UIViewController, MCSessionDelegate {
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
         //Called when a peer sends an "NSData" to this device
         
-        print("QUIZ << didReceive data: SCORE START!")
+        print("QUIZ << didReceive data (ANS) START!")
         
-        //Needs to be run on the main thread
+        //1. Needs to be run on the main thread - Read data from peers
         DispatchQueue.main.async {
             if let receivedANS = NSKeyedUnarchiver.unarchiveObject(with: data) as? String
             {
                 let peerIDindex = self.findCorrespondingPeerIndex(peerID: peerID)
-                print ("QUIZ <<< I  RECEIVED from \(peerIDindex) - and their answer is: \(receivedANS)")
+                
+                print ("QUIZ <<< I  RECEIVED from Player number: \(peerIDindex) - and their answer is: \(receivedANS)")
+                
+                //2. UPDATE LABELS (Answer + Score)
                 self.updatePlayerLabels(peerIDindex: peerIDindex, receivedANS: receivedANS)
+                
+                //3. Update number of players who submitted an answer
+                self.submittedPlayersNUM += 1
             }
             else
             {
-                print ("<< :( could not send data")
+                print ("<< :( could not receive data")
             }
         }
     }
@@ -615,10 +664,16 @@ class QuizViewController: UIViewController, MCSessionDelegate {
         switch peerIDindex {
         case 0:
             ans2LBL.text = receivedANS
+            score2 += 1
+            score2LBL.text = "\(score2)"
         case 1:
             ans3LBL.text = receivedANS
+            score3 += 1
+            score3LBL.text = "\(score3)"
         case 2:
             ans4LBL.text = receivedANS
+            score4 += 1
+            score4LBL.text = "\(score4)"
         default:
             break
         }
