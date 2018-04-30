@@ -1,15 +1,16 @@
 //
-//  QuizViewController.swift
+//  multiplayerVC.swift
 //  IkramManPA5
 //
-//  Created by Ikram Hamizi on 4/25/18.
+//  Created by Man Vu on 4/30/18.
 //  Copyright © 2018 cstech. All rights reserved.
 //
 
 import UIKit
 import CoreMotion
+import MultipeerConnectivity
 
-class QuizViewController: UIViewController {
+class multiplayerVC: UIViewController, MCSessionDelegate {
     
     //1 - VARS
     private var MAXTIMEQUESTION = 20
@@ -25,23 +26,46 @@ class QuizViewController: UIViewController {
     private var currentQuestion_number = 1 //Also = c_q_index + 1
     
     private var correctOption: String!
-    private var isCorrectAnswer = false
     private var isClicked = false
     
     var chosenOption = 4
     
     var motionManager = CMMotionManager()
-
-    var buttonList = [UIButton]()
-    //IBOUTLETS
-    @IBOutlet weak var questionNUM: UILabel!
     
+    var buttonList = [UIButton]()
+    var scoreLabelList = [UILabel]()
+    var imgList = [UIImageView]()
+    // Personal score
+    var myScore = 0
+    
+    var peerID: MCPeerID!
+    var session: MCSession!
+    
+    // peerAnswers, the count of peers who submit the answer
+    var peerAnswers = 0
+    // peer's name and score
+    var playerList = [(String, Int)]()
+    // IBOutlets
+   
+
+    @IBOutlet weak var questionNUM: UILabel!
     @IBOutlet weak var questionBody: UILabel!
     @IBOutlet weak var optionA: UIButton!
     @IBOutlet weak var optionB: UIButton!
     @IBOutlet weak var optionC: UIButton!
     @IBOutlet weak var optionD: UIButton!
     @IBOutlet weak var timeLBL: UILabel!
+    
+    @IBOutlet weak var peerOneLabel: UILabel!
+    @IBOutlet weak var peerFourLabel: UILabel!
+    @IBOutlet weak var peerThreeLabel: UILabel!
+    @IBOutlet weak var peerTwoLabel: UILabel!
+    @IBOutlet weak var myScoreLabel: UILabel!
+    
+    @IBOutlet weak var peerOneimg: UIImageView!
+    @IBOutlet weak var peerTwoImg: UIImageView!
+    @IBOutlet weak var peerThreeImg: UIImageView!
+    @IBOutlet weak var peerFourImg: UIImageView!
     
     //2- FUNCTIONS
     //1~ VIEWDIDLOAD
@@ -57,6 +81,27 @@ class QuizViewController: UIViewController {
         }
         
         unselectAllBTNs()
+        
+        scoreLabelList = [peerOneLabel, peerTwoLabel, peerThreeLabel, peerFourLabel]
+        
+        imgList = [peerOneimg, peerTwoImg, peerThreeImg, peerFourImg]
+        
+        session.delegate = self
+        
+        // Set all scores to 0
+        myScore = 0
+        myScoreLabel.text = "My Score: \(myScore)"
+        
+        for each in session.connectedPeers {
+            playerList.append((each.displayName, 0))
+        }
+        
+        // Update peer score labels
+        for i in 0..<session.connectedPeers.count {
+            scoreLabelList[i].text = "0"
+            imgList[i].image = UIImage(named: "\(i)")
+            imgList[i].alpha = 1
+        }
         
         //Store questions.dict in a dictionary -> questions: [[String:Any]]!
         readQuestionsFromJSON()
@@ -76,17 +121,17 @@ class QuizViewController: UIViewController {
     private func unselectAllBTNs()
     {
         /*
-        selectedA = 0
-        selectedB = 0
-        selectedC = 0
-        selectedD = 0
-        */
+         selectedA = 0
+         selectedB = 0
+         selectedC = 0
+         selectedD = 0
+         */
         
         for each in buttonList {
             each.alpha = 1
         }
     }
-
+    
     // Everytime a button is clicked, it sends the tag
     @IBAction func onClick(_ sender: UIButton) {
         
@@ -97,18 +142,19 @@ class QuizViewController: UIViewController {
             
             submitAnswer()
         }
-        
-        // The button is clicked for the first time, set the chosenOption to button's tag (id)
+            
+            // The button is clicked for the first time, set the chosenOption to button's tag (id)
         else {
-        chosenOption = sender.tag
-        // Set chosen button's alpha to 0.5
-        buttonList[chosenOption].alpha = 0.5
+            chosenOption = sender.tag
+            // Set chosen button's alpha to 0.5
+            buttonList[chosenOption].alpha = 0.5
         }
     }
     
     // Submit the answer
     func submitAnswer() {
         
+        if isClicked == false {
         var chosen: String
         switch chosenOption {
         case 0: chosen = "A"
@@ -119,17 +165,28 @@ class QuizViewController: UIViewController {
         }
         
         if chosen == correctOption {
-            isCorrectAnswer = true
+            myScore += 1
             timeLBL.text = "Correct! Answer is \(chosen)"
         }
         else {
-            isCorrectAnswer = false
             timeLBL.text = "WRONG :( Answer is \(correctOption!)"
         }
         
-        isClicked = true
-
+        
+        
+        myScoreLabel.text = "My Score: \(myScore)"
         chosenOption = 4
+        
+        do {
+            let sending = NSKeyedArchiver.archivedData(withRootObject: myScore)
+            try session.send(sending, toPeers: session.connectedPeers, with: .reliable)
+        }
+        catch let err {
+            print(err)
+        }
+        
+            isClicked = true
+        }
     }
     
     @objc func updateDeviceMotion(){
@@ -139,7 +196,7 @@ class QuizViewController: UIViewController {
             let attitude = data.attitude
             
             let userAcceleration = data.userAcceleration
-
+            
             // Tilt right, move chosen option to the right 0->1, 2->3
             if attitude.roll > 0.8 && attitude.roll < 2 {
                 
@@ -202,7 +259,7 @@ class QuizViewController: UIViewController {
             
         }
     }
-   
+    
     private func readQuestionsFromJSON()
     {
         //1- URL String
@@ -270,8 +327,12 @@ class QuizViewController: UIViewController {
             //print ("time--: \(time)")
             timeLBL.text = "time remaining: \(time)"
             
-            if time == 0 || isClicked
+            // if all peers have answered, go to next question
+            if time == 0 || (peerAnswers == session.connectedPeers.count && isClicked)
             {
+                // reset peerAnswers
+                peerAnswers = 0
+                
                 //2- Invalidate question TIMER
                 invalidateTimer()
                 
@@ -290,7 +351,7 @@ class QuizViewController: UIViewController {
     
     private func nextQuestion()
     {
-        isCorrectAnswer = false
+        
         isClicked = false
         
         unselectAllBTNs()
@@ -306,7 +367,16 @@ class QuizViewController: UIViewController {
         }
         else
         {
-            timeLBL.text = "GAME OVER"
+            // Sort the list
+            playerList.sort(by: {$0.1 > $1.1})
+            // If myScore is greater than the max of the players' scores, the user wins
+            if myScore > playerList[0].1 {
+                timeLBL.text = "GAME OVER, YOU WIN"
+            }
+            
+            else {
+                timeLBL.text = "GAME OVER, YOU LOSE"
+            }
         }
     }
     
@@ -332,4 +402,48 @@ class QuizViewController: UIViewController {
             }
         }
     }
+    
+    func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
+        
+    }
+    
+    // Receive score from specific peer, update their score in the playerList
+    func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
+        
+        DispatchQueue.main.async {
+            if let received = NSKeyedUnarchiver.unarchiveObject(with: data) as? Int {
+                self.peerAnswers += 1
+                
+                // Find the player in the list and update their score, also update the label
+                let index = self.playerList.index(where: {$0.0 == peerID.displayName})
+                self.playerList[index!].1 = received
+                self.scoreLabelList[index!].text = "\(received)"
+            }
+        }
+    }
+    
+    func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
+        
+    }
+    
+    func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {
+        
+    }
+    
+    func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {
+        
+    }
+    
+    
+
+    /*
+    // MARK: - Navigation
+
+    // In a storyboard-based application, you will often want to do a little preparation before navigation
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        // Get the new view controller using segue.destinationViewController.
+        // Pass the selected object to the new view controller.
+    }
+    */
+
 }

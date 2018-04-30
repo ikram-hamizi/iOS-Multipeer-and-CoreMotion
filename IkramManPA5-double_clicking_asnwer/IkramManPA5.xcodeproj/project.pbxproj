@@ -15,6 +15,7 @@
 		20B43BE32091544E00A32F20 /* IkramManPA5Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20B43BE22091544E00A32F20 /* IkramManPA5Tests.swift */; };
 		20B43BEE2091544E00A32F20 /* IkramManPA5UITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20B43BED2091544E00A32F20 /* IkramManPA5UITests.swift */; };
 		20EC6924209279F200FEAE98 /* QuizViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20EC6923209279F200FEAE98 /* QuizViewController.swift */; };
+		AF2A41612097A80300277B47 /* multiplayerVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF2A41602097A80300277B47 /* multiplayerVC.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -49,6 +50,7 @@
 		20B43BED2091544E00A32F20 /* IkramManPA5UITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IkramManPA5UITests.swift; sourceTree = "<group>"; };
 		20B43BEF2091544E00A32F20 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		20EC6923209279F200FEAE98 /* QuizViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizViewController.swift; sourceTree = "<group>"; };
+		AF2A41602097A80300277B47 /* multiplayerVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = multiplayerVC.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -102,6 +104,7 @@
 				20EC6923209279F200FEAE98 /* QuizViewController.swift */,
 				20B43BCD2091544E00A32F20 /* AppDelegate.swift */,
 				20B43BCF2091544E00A32F20 /* ViewController.swift */,
+				AF2A41602097A80300277B47 /* multiplayerVC.swift */,
 				20B43BD12091544E00A32F20 /* Main.storyboard */,
 				20B43BD42091544E00A32F20 /* Assets.xcassets */,
 				20B43BD62091544E00A32F20 /* LaunchScreen.storyboard */,
@@ -265,6 +268,7 @@
 				20EC6924209279F200FEAE98 /* QuizViewController.swift in Sources */,
 				20B43BD02091544E00A32F20 /* ViewController.swift in Sources */,
 				20B43BCE2091544E00A32F20 /* AppDelegate.swift in Sources */,
+				AF2A41612097A80300277B47 /* multiplayerVC.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

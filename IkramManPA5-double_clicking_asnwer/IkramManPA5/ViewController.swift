@@ -17,17 +17,15 @@ class ViewController: UIViewController, MCBrowserViewControllerDelegate, MCSessi
     private var browser: MCBrowserViewController! //3.
     private var ADassistant: MCAdvertiserAssistant! //4.
     
-    private var MAXPLAYERS = 2
-    private var players_peerIDs: [MCPeerID]!
+    private var MAXPLAYERS = 4
     
-    private var gameIsChosen = false
+    // Game type 0 for single, 1 for multiplayer
+    var gameType = 0
     
     //I- FUNCTIONS
     override func viewDidLoad()
     {
         super.viewDidLoad()
-        gameIsChosen = false
-        players_peerIDs = [MCPeerID]()
     }
     
     private func multiplayer()
@@ -55,7 +53,7 @@ class ViewController: UIViewController, MCBrowserViewControllerDelegate, MCSessi
         //--> PRESENT --- (3.Browser)
         present(browser, animated: true, completion: nil)
     }
-    
+    /*
     private func sendInformation()
     {
         let dataToSend =  NSKeyedArchiver.archivedData(withRootObject: players_peerIDs)
@@ -67,37 +65,61 @@ class ViewController: UIViewController, MCBrowserViewControllerDelegate, MCSessi
             print("Error in sending data \(e)")
         }
     }
-    
-    private func singleplayer()
-    {
-        
-    }
+ */
+ 
     
     @IBAction func chooseGame(_ sender: UISegmentedControl)
     {
         if (sender.selectedSegmentIndex == 0) //SINGLE PLAYER
         {
             print ("SINGLE")
-            singleplayer()
-            gameIsChosen = true
+            gameType = 0
         }
         else //MULTI PLAYER
         {
             print ("MULTI")
             multiplayer()
-            gameIsChosen = true
+            gameType = 1
         }
     }
     
     
     @IBAction func startQuiz(_ sender: UIButton)
     {
-        print ("start quiz clicked")
-        if gameIsChosen
-        {
-            print ("game chosen -> quiz can start")
-            performSegue(withIdentifier: "startQuizSegue", sender: sender)
-        }
+            // gameType = 0, go to singlePlayer VC
+            if gameType == 0 {
+                performSegue(withIdentifier: "singlePlayer", sender: self)
+            }
+            
+            else {
+                if self.session.connectedPeers.count == 0 {
+                    
+                    let alert = UIAlertController(title: "Error", message: "No connected players", preferredStyle: .alert)
+                    
+                    let cancelAction = UIAlertAction(title: "OK", style: .cancel, handler: nil)
+                    
+                    alert.addAction(cancelAction)
+                    
+                    present(alert, animated: true, completion: nil)
+                    
+                }
+                
+                else {
+                    
+                    do {
+                        let data = NSKeyedArchiver.archivedData(withRootObject: "Start")
+                        try session.send(data, toPeers: session.connectedPeers, with: .reliable)
+                    }
+                    catch let err{
+                        print(err)
+                    }
+                    
+                    performSegue(withIdentifier: "multiplayer", sender: self)
+                    
+                }
+            }
+            
+        
     }
     
     //II. Mandatory FNs
@@ -123,13 +145,14 @@ class ViewController: UIViewController, MCBrowserViewControllerDelegate, MCSessi
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
         //Called when a peer sends an "NSData" to this device
         
-        print("<< didReceive data START!")
         
         //Needs to be run on the main thread
         DispatchQueue.main.async {
-            if let receivedPEERS = NSKeyedUnarchiver.unarchiveObject(with: data) as? [MCPeerID]
+            if let received = NSKeyedUnarchiver.unarchiveObject(with: data) as? String
             {
-                print ("<<< I  RECEIVED NEW PEER ADDED: \([receivedPEERS.count])")
+                if received == "Start" {
+                    self.performSegue(withIdentifier: "multiplayer", sender: self)
+                }
             }
         }
     }
@@ -142,26 +165,37 @@ class ViewController: UIViewController, MCBrowserViewControllerDelegate, MCSessi
     //DID CHANGE
     func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState)
     {
-        //Called when a connected peer changes states (e.g. goes offline)
-        
-        switch state {
-        case MCSessionState.connected:
-            if (MAXPLAYERS > 0)
-            {
-                print("Connected: \(peerID.displayName)")
-                //sendInformation()
-                MAXPLAYERS -= 1
+        // Do the player count check everytime someone tries to connect
+        if state == .connecting {
+            // Check if maximum number of players has reached
+            if session.connectedPeers.count == MAXPLAYERS {
+                // Drop that guy, reject his connection
+                session.cancelConnectPeer(peerID)
+                // Close browser
+                browser.dismiss(animated: true) {
+                    // Show alert to user
+                    let alert = UIAlertController(title: "Error", message: "Maximum number of users reached", preferredStyle: .alert)
+                    let action = UIAlertAction(title: "OK", style: .cancel, handler: nil)
+                    alert.addAction(action)
+                    self.present(alert, animated: true, completion: nil)
+                }
             }
-        case MCSessionState.connecting:
-            print("Connecting: \(peerID.displayName)")
-        case MCSessionState.notConnected:
-            print("Disconnected: \(peerID.displayName)")
         }
     }
     
     //DIDFINISHRECEIVING
     func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {
         //Called when a file has finished transferring from another peer
+    }
+    
+    // Prepare for segue
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "multiplayer" {
+            if let mvc = segue.destination as? multiplayerVC {
+                mvc.peerID = self.peerID
+                mvc.session = self.session
+            }
+        }
     }
 }
 
