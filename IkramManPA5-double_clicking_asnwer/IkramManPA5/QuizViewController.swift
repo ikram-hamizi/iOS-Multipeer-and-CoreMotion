@@ -8,10 +8,16 @@
 
 import UIKit
 import CoreMotion
+import MultipeerConnectivity
 
-class QuizViewController: UIViewController {
+class QuizViewController: UIViewController, MCSessionDelegate {
     
     //1 - VARS
+    //Vars received from SEGUE
+    var isMultiplayer: Bool?
+    var MCsession: MCSession?
+    
+    //Global VARS
     private var MAXTIMEQUESTION = 20
     
     private var TIMER = Timer()
@@ -28,9 +34,9 @@ class QuizViewController: UIViewController {
     private var isCorrectAnswer = false
     private var isClicked = false
     
-    var chosenOption = 4
+    private var chosenOption = 4
     
-    var motionManager = CMMotionManager()
+    private var motionManager = CMMotionManager()
 
    /*
     private var selectedA = 0
@@ -39,31 +45,63 @@ class QuizViewController: UIViewController {
     private var selectedD = 0
     */
     
-    var buttonList = [UIButton]()
+    private var buttonList = [UIButton]()
     //IBOUTLETS
-    @IBOutlet weak var questionNUM: UILabel!
+    @IBOutlet private weak var questionNUM: UILabel!
     
-    @IBOutlet weak var questionBody: UILabel!
-    @IBOutlet weak var optionA: UIButton!
-    @IBOutlet weak var optionB: UIButton!
-    @IBOutlet weak var optionC: UIButton!
-    @IBOutlet weak var optionD: UIButton!
-    @IBOutlet weak var timeLBL: UILabel!
+    @IBOutlet private weak var questionBody: UILabel!
+    @IBOutlet private weak var optionA: UIButton!
+    @IBOutlet private weak var optionB: UIButton!
+    @IBOutlet private weak var optionC: UIButton!
+    @IBOutlet private weak var optionD: UIButton!
+    @IBOutlet private weak var timeLBL: UILabel!
+    
+    //MULTIPLAYER IMAGES
+    @IBOutlet private weak var player1IMG: UIImageView!
+    @IBOutlet private weak var player2IMG: UIImageView!
+    @IBOutlet private weak var player3IMG: UIImageView!
+    @IBOutlet private weak var player4IMG: UIImageView!
+    
+    @IBOutlet private weak var bubble1IMG: UIImageView!
+    @IBOutlet private weak var bubble2IMG: UIImageView!
+    @IBOutlet private weak var bubble3IMG: UIImageView!
+    @IBOutlet private weak var bubble4IMG: UIImageView!
+    
+    private var multiplayerIMGS: [UIImageView]!
+    private var lbl1: UILabel!
+    private var lbl2: UILabel!
+    private var lbl3: UILabel!
+    private var lbl4: UILabel!
+    
     
     //2- FUNCTIONS
     //1~ VIEWDIDLOAD
     override func viewDidLoad()
     {
         super.viewDidLoad()
+        multiplayerIMGS = [player1IMG, player2IMG, player3IMG, player4IMG, bubble1IMG, bubble2IMG, bubble3IMG, bubble4IMG]
         
         // Put the buttons in an array
         buttonList = [optionA, optionB, optionC, optionD]
+        
         // Add action to each
         for each in buttonList {
             each.addTarget(self, action: #selector(onClick(_:)), for: .touchUpInside)
         }
         
         unselectAllBTNs()
+        
+        if isMultiplayer!
+        {
+            unhideAllMultiplayerImages()
+            addAnswerSubviewsToBubbles()
+            multiplayer()
+        }
+        else
+        {
+            hideAllMultiplayerImages()
+            singleplayer()
+        }
         
         //Store questions.dict in a dictionary -> questions: [[String:Any]]!
         readQuestionsFromJSON()
@@ -91,6 +129,28 @@ class QuizViewController: UIViewController {
         
         for each in buttonList {
             each.alpha = 1
+        }
+    }
+    
+    private func addAnswerSubviewsToBubbles()
+    {
+        bubble1IMG.addSubview(lbl1)
+        bubble2IMG.addSubview(lbl2)
+        bubble3IMG.addSubview(lbl3)
+        bubble4IMG.addSubview(lbl4)
+    }
+    
+    private func hideAllMultiplayerImages()
+    {
+        for each in multiplayerIMGS {
+            each.isHidden = true
+        }
+    }
+    
+    private func unhideAllMultiplayerImages()
+    {
+        for each in multiplayerIMGS {
+            each.isHidden = false
         }
     }
 
@@ -312,6 +372,16 @@ class QuizViewController: UIViewController {
         }
     }
     */
+    
+    private func multiplayer()
+    {
+        
+    }
+    
+    private func singleplayer()
+    {
+        
+    }
     private func readQuestionsFromJSON()
     {
         //1- URL String
@@ -440,5 +510,58 @@ class QuizViewController: UIViewController {
                 self.correctOption = correctOption
             }
         }
+    }
+    
+    
+    
+    
+    
+    //FNs: MCSessionDelegate (5 REQUIRED)
+    //1. DID START RECEIVING
+    func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {
+        //Called when a peer starts snding a "file" to this device
+    }
+    
+    //2. DID RECEIVE
+    func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
+        //Called when a peer sends an "NSData" to this device
+        
+        print("QUIZ << didReceive data START!")
+        
+        //Needs to be run on the main thread
+        DispatchQueue.main.async
+        {
+            if let receivedPEERS = NSKeyedUnarchiver.unarchiveObject(with: data) as? [MCPeerID]
+            {
+                print ("QUIZ <<< I  RECEIVED NEW PEER ADDED: \([receivedPEERS.count])")
+            }
+        }
+    }
+    
+    //3. DID RECEIVE STREAM
+    func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID)
+    {
+        //Called when a peer establishes a stream with this device
+    }
+    
+    //4. DID CHANGE
+    func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState)
+    {
+        //Called when a connected peer changes states (e.g. goes offline)
+        
+        switch state {
+        case MCSessionState.connected:
+            print("Quiz - Connected: \(peerID.displayName)")
+        case MCSessionState.connecting:
+            print("Quiz - Connecting: \(peerID.displayName)")
+        case MCSessionState.notConnected:
+            print("Quiz - Disconnected: \(peerID.displayName)")
+        }
+    }
+    
+    //5. DIDFINISHRECEIVING
+    func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?)
+    {
+        //Called when a file has finished transferring from another peer
     }
 }

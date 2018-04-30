@@ -18,7 +18,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" image="nerd" translatesAutoresizingMaskIntoConstraints="NO" id="E3t-vN-mta">
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="nerd" translatesAutoresizingMaskIntoConstraints="NO" id="E3t-vN-mta">
                                 <rect key="frame" x="33" y="99" width="146" height="143"/>
                             </imageView>
                             <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="Uc5-4N-ezf">
@@ -39,7 +39,7 @@
                                     <segue destination="qVp-vs-dSm" kind="show" identifier="startQuizSegue" id="tg9-zk-Ty4"/>
                                 </connections>
                             </button>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" image="group" translatesAutoresizingMaskIntoConstraints="NO" id="taF-dk-mfG">
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="group" translatesAutoresizingMaskIntoConstraints="NO" id="taF-dk-mfG">
                                 <rect key="frame" x="196" y="99" width="146" height="143"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="143" id="AZx-6a-nLL"/>
@@ -54,6 +54,7 @@
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="bko-8e-Axc" secondAttribute="bottom" constant="254" id="8vA-ow-H1u"/>
                             <constraint firstItem="bko-8e-Axc" firstAttribute="top" secondItem="Uc5-4N-ezf" secondAttribute="bottom" constant="74" id="Ay8-5n-CcE"/>
                             <constraint firstItem="taF-dk-mfG" firstAttribute="leading" secondItem="E3t-vN-mta" secondAttribute="trailing" constant="17" id="H2G-q9-cv6"/>
+                            <constraint firstItem="E3t-vN-mta" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="33" id="IDu-LL-gpe"/>
                             <constraint firstItem="Uc5-4N-ezf" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="33" id="KTc-M7-qJH"/>
                             <constraint firstItem="Uc5-4N-ezf" firstAttribute="top" secondItem="taF-dk-mfG" secondAttribute="bottom" constant="39" id="aXx-lE-rbL"/>
                             <constraint firstItem="taF-dk-mfG" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="79" id="c7V-8k-dbW"/>
@@ -123,7 +124,7 @@
                             </button>
                             <button opaque="NO" tag="3" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Qes-kS-SxP">
                                 <rect key="frame" x="194" y="374.5" width="151" height="117"/>
-                                <color key="backgroundColor" red="0.28290436020782644" green="0.55861398963730569" blue="0.29684425966406958" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <color key="backgroundColor" red="0.56728896522456906" green="0.82047693006732925" blue="0.1533793808886533" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                 <state key="normal" title="D">
                                     <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
@@ -247,10 +248,18 @@
                         <viewLayoutGuide key="safeArea" id="zfA-gP-Qzz"/>
                     </view>
                     <connections>
+                        <outlet property="bubble1IMG" destination="zVO-Bw-dKK" id="SwD-vK-e5b"/>
+                        <outlet property="bubble2IMG" destination="t6a-VH-4cf" id="CAP-Ae-EPq"/>
+                        <outlet property="bubble3IMG" destination="YiR-t5-oWG" id="c8G-BC-8Uf"/>
+                        <outlet property="bubble4IMG" destination="G6h-vV-1wS" id="Ord-yE-ZhY"/>
                         <outlet property="optionA" destination="7a7-SH-yy8" id="FDU-0o-SQb"/>
                         <outlet property="optionB" destination="sAw-2d-4Zh" id="MZl-XG-Qb3"/>
                         <outlet property="optionC" destination="gPn-Ct-esS" id="Uql-3Q-fCA"/>
                         <outlet property="optionD" destination="Qes-kS-SxP" id="cke-tE-mMx"/>
+                        <outlet property="player1IMG" destination="zKZ-ek-SqV" id="usT-Tk-Ca4"/>
+                        <outlet property="player2IMG" destination="eAK-85-PLH" id="bzp-gz-NoR"/>
+                        <outlet property="player3IMG" destination="ekV-YI-wu1" id="xLS-O2-iHI"/>
+                        <outlet property="player4IMG" destination="My7-Kt-4H6" id="AwP-Xd-QB9"/>
                         <outlet property="questionBody" destination="67j-2M-IFz" id="aUV-6k-B9F"/>
                         <outlet property="questionNUM" destination="Skb-YE-kPY" id="tLm-ne-2Ee"/>
                         <outlet property="timeLBL" destination="6Bk-n9-GLH" id="vVf-lR-pLb"/>

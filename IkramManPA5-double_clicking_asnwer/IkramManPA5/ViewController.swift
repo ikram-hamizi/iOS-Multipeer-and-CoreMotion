@@ -17,10 +17,11 @@ class ViewController: UIViewController, MCBrowserViewControllerDelegate, MCSessi
     private var browser: MCBrowserViewController! //3.
     private var ADassistant: MCAdvertiserAssistant! //4.
     
-    private var MAXPLAYERS = 2
+    private var MAXPLAYERS = 3
     private var players_peerIDs: [MCPeerID]!
     
     private var gameIsChosen = false
+     private var isMultiPlayer = false
     
     //I- FUNCTIONS
     override func viewDidLoad()
@@ -79,6 +80,7 @@ class ViewController: UIViewController, MCBrowserViewControllerDelegate, MCSessi
         {
             print ("SINGLE")
             singleplayer()
+            isMultiPlayer = false
             gameIsChosen = true
         }
         else //MULTI PLAYER
@@ -86,9 +88,10 @@ class ViewController: UIViewController, MCBrowserViewControllerDelegate, MCSessi
             print ("MULTI")
             multiplayer()
             gameIsChosen = true
+            isMultiPlayer = true
         }
     }
-    
+   
     
     @IBAction func startQuiz(_ sender: UIButton)
     {
@@ -100,6 +103,13 @@ class ViewController: UIViewController, MCBrowserViewControllerDelegate, MCSessi
         }
     }
     
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if let quizSegue = segue.destination as? QuizViewController
+        {
+            quizSegue.isMultiplayer = isMultiPlayer
+            quizSegue.MCsession = session
+        }
+    }
     //II. Mandatory FNs
     //1. MCBrowserViewControllerDelegate (2 REQUIRED)
     func browserViewControllerDidFinish(_ browserViewController: MCBrowserViewController) {
@@ -114,7 +124,7 @@ class ViewController: UIViewController, MCBrowserViewControllerDelegate, MCSessi
     
     //2. MCSessionDelegate (5 REQUIRED)
     
-    //DID RECEIVE
+    //DID START RECEIVING
     func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {
         //Called when a peer starts snding a "file" to this device
     }
@@ -146,11 +156,17 @@ class ViewController: UIViewController, MCBrowserViewControllerDelegate, MCSessi
         
         switch state {
         case MCSessionState.connected:
-            if (MAXPLAYERS > 0)
+            if MAXPLAYERS > 0
             {
                 print("Connected: \(peerID.displayName)")
                 //sendInformation()
                 MAXPLAYERS -= 1
+            }
+            if MAXPLAYERS == 0
+            {
+                ADassistant.stop() //1. Stop advertising
+                browserViewControllerDidFinish(browser) //2. Exit "Done" MP Browser
+                MAXPLAYERS -= 1 //3. Prevent from entering the condition-statements.
             }
         case MCSessionState.connecting:
             print("Connecting: \(peerID.displayName)")
