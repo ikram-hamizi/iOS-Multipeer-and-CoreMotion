@@ -139,6 +139,11 @@ class QuizViewController: UIViewController, MCSessionDelegate {
     
     private func addAnswerSubviewsToBubbles()
     {
+        bubble1IMG.layer.zPosition = 1
+        bubble2IMG.layer.zPosition = 1
+        bubble3IMG.layer.zPosition = 1
+        bubble4IMG.layer.zPosition = 1
+        
         ans1LBL = UILabel()
         ans2LBL = UILabel()
         ans3LBL = UILabel()
@@ -148,6 +153,11 @@ class QuizViewController: UIViewController, MCSessionDelegate {
         ans2LBL.text = ""
         ans3LBL.text = ""
         ans4LBL.text = ""
+        
+        ans1LBL.layer.zPosition = 2
+        ans2LBL.layer.zPosition = 2
+        ans3LBL.layer.zPosition = 2
+        ans4LBL.layer.zPosition = 2
         
         bubble1IMG.addSubview(ans1LBL)
         bubble2IMG.addSubview(ans2LBL)
@@ -579,11 +589,46 @@ class QuizViewController: UIViewController, MCSessionDelegate {
         
         //Needs to be run on the main thread
         DispatchQueue.main.async {
-            if let receivedSCORE = NSKeyedUnarchiver.unarchiveObject(with: data) as? String
+            if let receivedANS = NSKeyedUnarchiver.unarchiveObject(with: data) as? String
             {
-                print ("QUIZ <<< I  RECEIVED NEW score: \(receivedSCORE)")
+                let peerIDindex = self.findCorrespondingPeerIndex(peerID: peerID)
+                print ("QUIZ <<< I  RECEIVED from \(peerIDindex) - and their answer is: \(receivedANS)")
+                self.updatePlayerLabels(peerIDindex: peerIDindex, receivedANS: receivedANS)
+            }
+            else
+            {
+                print ("<< :( could not send data")
             }
         }
+    }
+    
+    private func updatePlayerLabels(peerIDindex: Int, receivedANS: String)
+    {
+        switch peerIDindex {
+        case 0:
+            ans2LBL.text = receivedANS
+        case 1:
+            ans3LBL.text = receivedANS
+        case 2:
+            ans4LBL.text = receivedANS
+        default:
+            break
+        }
+    }
+    
+    private func findCorrespondingPeerIndex(peerID: MCPeerID) -> Int
+    {
+        if let quizSession = MCsession
+        {
+            for i in stride(from: 0, to: quizSession.connectedPeers.count, by: 1)
+            {
+                if peerID.displayName == quizSession.connectedPeers[i].displayName
+                {
+                    return i
+                }
+            }
+        }
+        return -1
     }
     
     //3. DID RECEIVE STREAM
