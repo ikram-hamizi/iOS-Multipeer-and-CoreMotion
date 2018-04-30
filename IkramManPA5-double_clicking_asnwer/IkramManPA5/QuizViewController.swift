@@ -10,6 +10,13 @@ import UIKit
 import CoreMotion
 import MultipeerConnectivity
 
+//1//. BUGS:
+//1- Other peer is not receivng data (didReceive: data function is entered, but data is not unarchived)
+
+//2//. TODO:
+//1- UPDATE SCORES
+//2- ADD PLAYER NAMES LABELS
+
 class QuizViewController: UIViewController, MCSessionDelegate {
     
     //1 - VARS
@@ -46,6 +53,7 @@ class QuizViewController: UIViewController, MCSessionDelegate {
      */
     
     private var buttonList = [UIButton]()
+    
     //IBOUTLETS
     @IBOutlet private weak var questionNUM: UILabel!
     

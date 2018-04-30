@@ -9,6 +9,14 @@
 import UIKit
 import MultipeerConnectivity
 
+
+//BUGS:
+//1. clicking on START QUIZ without choosing a game should not be allowed
+
+//TODO:
+//1. Other peers' START BUTTONS are clicked automatically <<----- NEEDS TO BE TESTED
+//2. Change design
+
 class ViewController: UIViewController, MCBrowserViewControllerDelegate, MCSessionDelegate {
     
     //1- VARS
@@ -17,6 +25,7 @@ class ViewController: UIViewController, MCBrowserViewControllerDelegate, MCSessi
     private var browser: MCBrowserViewController! //3.
     private var ADassistant: MCAdvertiserAssistant! //4.
     
+    @IBOutlet weak var startQuizBTN: UIButton!
     private var MAXPLAYERS = 1
     private var players_peerIDs: [MCPeerID]!
     
@@ -33,7 +42,7 @@ class ViewController: UIViewController, MCBrowserViewControllerDelegate, MCSessi
     
     private func multiplayer()
     {
-        let serviceType = "Chat"
+        let serviceType = "MPGame"
         
         //1. peerID: Device with property displayName
         self.peerID = MCPeerID(displayName: UIDevice.current.name)
@@ -62,16 +71,11 @@ class ViewController: UIViewController, MCBrowserViewControllerDelegate, MCSessi
         let dataToSend =  NSKeyedArchiver.archivedData(withRootObject: players_peerIDs)
         
         do{
-            try session.send(dataToSend, toPeers: session.connectedPeers, with: .unreliable)
+            try session.send(dataToSend, toPeers: session.connectedPeers, with: .reliable)
         }
         catch let e {
             print("Error in sending data \(e)")
         }
-    }
-    
-    private func singleplayer()
-    {
-        
     }
     
     @IBAction func chooseGame(_ sender: UISegmentedControl)
@@ -79,7 +83,6 @@ class ViewController: UIViewController, MCBrowserViewControllerDelegate, MCSessi
         if (sender.selectedSegmentIndex == 0) //SINGLE PLAYER
         {
             print ("SINGLE")
-            singleplayer()
             isMultiPlayer = false
             gameIsChosen = true
         }
@@ -92,12 +95,27 @@ class ViewController: UIViewController, MCBrowserViewControllerDelegate, MCSessi
         }
     }
    
+    private var quizIsStarted: Bool!
+    
+    private func startQuizForAll()
+    {
+        let dataToSend =  NSKeyedArchiver.archivedData(withRootObject: quizIsStarted)
+        
+        do{
+            try session.send(dataToSend, toPeers: session.connectedPeers, with: .reliable)
+        }
+        catch let e {
+            print("Error in informing players of 'start quiz' \(e)")
+        }
+    }
     
     @IBAction func startQuiz(_ sender: UIButton)
     {
         print ("start quiz clicked")
         if gameIsChosen
         {
+            quizIsStarted = true
+            startQuizForAll()
             print ("game chosen -> quiz can start")
             performSegue(withIdentifier: "startQuizSegue", sender: sender)
         }
@@ -140,6 +158,10 @@ class ViewController: UIViewController, MCBrowserViewControllerDelegate, MCSessi
             if let receivedPEERS = NSKeyedUnarchiver.unarchiveObject(with: data) as? [MCPeerID]
             {
                 print ("<<< I  RECEIVED NEW PEER ADDED: \([receivedPEERS.count])")
+            }
+            else if let isQuizStarted = NSKeyedUnarchiver.unarchiveObject(with: data) as? Bool
+            {
+                self.performSegue(withIdentifier: "startQuizSegue", sender: self.startQuizBTN)
             }
         }
     }
