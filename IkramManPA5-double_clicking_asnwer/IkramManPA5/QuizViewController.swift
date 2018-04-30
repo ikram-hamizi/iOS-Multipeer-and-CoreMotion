@@ -553,22 +553,24 @@ class QuizViewController: UIViewController, MCSessionDelegate {
             timeLBL.text = "time remaining: \(time)"
             
             //1- If Time is up --OR-- Singleplayer: option Clicked
-            if time == 0 || (!isMultiplayer! && isClicked)
+            if time == 0 || isClicked
             {
                 //2- Invalidate question TIMER
                 invalidateTimer()
                 
-                //3- Start TIMER again
-                nextQuestion()
-            }
-            
-            //2- If Multiplayer: ** Wait until everyone has submitted -> nextQuestion()
-            if isMultiplayer! && time > 0
-            {
-                if submittedPlayersNUM == MCsession!.connectedPeers.count
+                //3*- Start TIMER again
+                if !isMultiplayer! //Single Player
                 {
                     nextQuestion()
-                    submittedPlayersNUM = 0 //RESET
+                }
+                //3**- If Multiplayer: ** Wait until everyone has submitted -> nextQuestion()
+                if isMultiplayer! //Multi Player
+                {
+                    if submittedPlayersNUM == MCsession!.connectedPeers.count || time == 0
+                    {
+                        nextQuestion()
+                        submittedPlayersNUM = 0 //RESET
+                    }
                 }
             }
         }
