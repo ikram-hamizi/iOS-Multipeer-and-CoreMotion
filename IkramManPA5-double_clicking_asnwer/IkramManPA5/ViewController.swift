@@ -26,6 +26,7 @@ class ViewController: UIViewController, MCBrowserViewControllerDelegate, MCSessi
     override func viewDidLoad()
     {
         super.viewDidLoad()
+        navigationItem.titleView = UIImageView.init(image: UIImage(named: "title"))
     }
     
     private func multiplayer()
@@ -53,19 +54,6 @@ class ViewController: UIViewController, MCBrowserViewControllerDelegate, MCSessi
         //--> PRESENT --- (3.Browser)
         present(browser, animated: true, completion: nil)
     }
-    /*
-    private func sendInformation()
-    {
-        let dataToSend =  NSKeyedArchiver.archivedData(withRootObject: players_peerIDs)
-        
-        do{
-            try session.send(dataToSend, toPeers: session.connectedPeers, with: .unreliable)
-        }
-        catch let e {
-            print("Error in sending data \(e)")
-        }
-    }
- */
  
     
     @IBAction func chooseGame(_ sender: UISegmentedControl)

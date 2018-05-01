@@ -28,6 +28,8 @@ class QuizViewController: UIViewController {
     private var isCorrectAnswer = false
     private var isClicked = false
     
+    var myScore = 0
+    
     var chosenOption = 4
     
     var motionManager = CMMotionManager()
@@ -43,6 +45,10 @@ class QuizViewController: UIViewController {
     @IBOutlet weak var optionD: UIButton!
     @IBOutlet weak var timeLBL: UILabel!
     
+    @IBOutlet weak var myScoreLabel: UILabel!
+    
+    @IBOutlet weak var restartButton: UIButton!
+    
     //2- FUNCTIONS
     //1~ VIEWDIDLOAD
     override func viewDidLoad()
@@ -57,6 +63,10 @@ class QuizViewController: UIViewController {
         }
         
         unselectAllBTNs()
+        
+        myScoreLabel.text = "My Score: \(myScore)"
+        
+        restartButton.isHidden = true
         
         //Store questions.dict in a dictionary -> questions: [[String:Any]]!
         readQuestionsFromJSON()
@@ -75,13 +85,7 @@ class QuizViewController: UIViewController {
     // All buttons' alpha = 1
     private func unselectAllBTNs()
     {
-        /*
-        selectedA = 0
-        selectedB = 0
-        selectedC = 0
-        selectedD = 0
-        */
-        
+      
         for each in buttonList {
             each.alpha = 1
         }
@@ -120,6 +124,7 @@ class QuizViewController: UIViewController {
         
         if chosen == correctOption {
             isCorrectAnswer = true
+            myScore += 1
             timeLBL.text = "Correct! Answer is \(chosen)"
         }
         else {
@@ -127,6 +132,7 @@ class QuizViewController: UIViewController {
             timeLBL.text = "WRONG :( Answer is \(correctOption!)"
         }
         
+        myScoreLabel.text = "My Score: \(myScore)"
         isClicked = true
 
         chosenOption = 4
@@ -275,8 +281,10 @@ class QuizViewController: UIViewController {
                 //2- Invalidate question TIMER
                 invalidateTimer()
                 
-                //3- Start TIMER again
-                nextQuestion()
+                //3- Start TIMER again after 2s
+                Timer.scheduledTimer(withTimeInterval: 2, repeats: false) { _ in
+                    self.nextQuestion()
+                }
             }
         }
     }
@@ -307,6 +315,7 @@ class QuizViewController: UIViewController {
         else
         {
             timeLBL.text = "GAME OVER"
+            restartButton.isHidden = false
         }
     }
     
@@ -332,4 +341,23 @@ class QuizViewController: UIViewController {
             }
         }
     }
+    
+    
+    @IBAction func restartAction(_ sender: UIButton) {
+        
+        currentQuestion_number = 1
+        c_q_index = 0
+        chosenOption = 4
+        isClicked = false
+        isCorrectAnswer = false
+        myScore = 0
+        
+        myScoreLabel.text = "My Score: \(myScore)"
+        
+        restartButton.isHidden = true
+        
+        readQuestionsFromJSON()
+    }
+    
+   
 }

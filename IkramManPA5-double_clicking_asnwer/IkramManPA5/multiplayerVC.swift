@@ -34,6 +34,7 @@ class multiplayerVC: UIViewController, MCSessionDelegate {
     
     var buttonList = [UIButton]()
     var scoreLabelList = [UILabel]()
+    var nameLabelList = [UILabel]()
     var imgList = [UIImageView]()
     // Personal score
     var myScore = 0
@@ -67,6 +68,16 @@ class multiplayerVC: UIViewController, MCSessionDelegate {
     @IBOutlet weak var peerThreeImg: UIImageView!
     @IBOutlet weak var peerFourImg: UIImageView!
     
+    @IBOutlet weak var nameOneLabel: UILabel!
+    
+    @IBOutlet weak var nameTwoLabel: UILabel!
+    
+    @IBOutlet weak var nameThreeLabel: UILabel!
+    
+    @IBOutlet weak var nameFourLabel: UILabel!
+    
+    @IBOutlet weak var restartButton: UIButton!
+    
     //2- FUNCTIONS
     //1~ VIEWDIDLOAD
     override func viewDidLoad()
@@ -86,6 +97,8 @@ class multiplayerVC: UIViewController, MCSessionDelegate {
         
         imgList = [peerOneimg, peerTwoImg, peerThreeImg, peerFourImg]
         
+        nameLabelList = [nameOneLabel, nameTwoLabel, nameThreeLabel, nameFourLabel]
+        
         session.delegate = self
         
         // Set all scores to 0
@@ -98,6 +111,10 @@ class multiplayerVC: UIViewController, MCSessionDelegate {
         
         // Update peer score labels
         for i in 0..<session.connectedPeers.count {
+            // Get the name and substring for first 3 letters
+            let playerName = playerList[i].0
+            nameLabelList[i].text = String(playerName.prefix(3))
+            // Set score to 0
             scoreLabelList[i].text = "0"
             imgList[i].image = UIImage(named: "\(i)")
             imgList[i].alpha = 1
@@ -105,6 +122,8 @@ class multiplayerVC: UIViewController, MCSessionDelegate {
         
         //Store questions.dict in a dictionary -> questions: [[String:Any]]!
         readQuestionsFromJSON()
+        
+        restartButton.isHidden = true
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -336,8 +355,10 @@ class multiplayerVC: UIViewController, MCSessionDelegate {
                 //2- Invalidate question TIMER
                 invalidateTimer()
                 
-                //3- Start TIMER again
-                nextQuestion()
+                //3- Start TIMER again after 2s
+                Timer.scheduledTimer(withTimeInterval: 2, repeats: false) { _ in
+                    self.nextQuestion()
+                }
             }
         }
     }
@@ -377,6 +398,8 @@ class multiplayerVC: UIViewController, MCSessionDelegate {
             else {
                 timeLBL.text = "GAME OVER, YOU LOSE"
             }
+            
+            restartButton.isHidden = false
         }
     }
     
@@ -403,6 +426,50 @@ class multiplayerVC: UIViewController, MCSessionDelegate {
         }
     }
     
+    
+    @IBAction func restart(_ sender: UIButton) {
+        // Send restart signal to peers
+        do {
+            let restartFlag = -1
+            let data = NSKeyedArchiver.archivedData(withRootObject: restartFlag)
+            try session.send(data, toPeers: session.connectedPeers, with: .reliable)
+        }
+        catch let err {
+            print(err)
+        }
+        
+        // Wait for 3s before restarting game
+        Timer.scheduledTimer(withTimeInterval: 3, repeats: false) { _ in
+            self.restartGame()
+        }
+        
+    }
+    
+    // Reset all vars
+    func restartGame() {
+        currentQuestion_number = 1
+        c_q_index = 0
+        chosenOption = 4
+        isClicked = false
+        myScore = 0
+        peerAnswers = 0
+        
+        // Set scores of players to 0
+        for i in 0..<session.connectedPeers.count {
+            playerList[i].1 = 0
+        }
+        // Update labels
+        myScoreLabel.text = "My Score: \(myScore)"
+        
+        for each in scoreLabelList {
+            each.text = "0"
+        }
+        
+        readQuestionsFromJSON()
+        
+        restartButton.isHidden = true
+    }
+    
     func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
         
     }
@@ -412,6 +479,15 @@ class multiplayerVC: UIViewController, MCSessionDelegate {
         
         DispatchQueue.main.async {
             if let received = NSKeyedUnarchiver.unarchiveObject(with: data) as? Int {
+                
+                if received == -1 {
+                    Timer.scheduledTimer(withTimeInterval: 3, repeats: false, block: { _ in
+                        self.restartGame()
+                    })
+                    
+                    return
+                }
+                
                 self.peerAnswers += 1
                 
                 // Find the player in the list and update their score, also update the label
